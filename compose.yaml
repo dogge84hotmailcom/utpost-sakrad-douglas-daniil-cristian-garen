@@ -27,12 +27,14 @@ services:
     volumes:
       - mongodata:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      test:
+        ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
       interval: 5s
       timeout: 3s
       retries: 10
 
   api:
+    image: utpost-api # M8: fast namn, så att jobbet Säkerhet kan skanna imagen (annars <mapp>-api)
     build:
       context: . # repots rot, inte api/ – Dockerfilen kopierar shared/ också
       dockerfile: api/Dockerfile
@@ -42,7 +44,7 @@ services:
       DATABASE_URL: postgres://utpost:utpost@postgres:5432/utpost
       MONGO_URL: mongodb://utpost:utpost@mongo:27017/utpost?authSource=admin
       JWT_SECRET: utpost-dev-secret-byt-i-molnet # M6: lokalt värde. I molnet: en secret i plattformen, aldrig i en fil som committas
-      SEED_ON_START: '1' # M6: tom databas vid start → seed + migrate:logs. Lokalt: harmlöst, seedar bara om users är tom
+      SEED_ON_START: "1" # M6: tom databas vid start → seed + migrate:logs. Lokalt: harmlöst, seedar bara om users är tom
       # M7: bildfunktionen kör inte i compose – den kör på din dator med func start (npm run dev:functions).
       # host.docker.internal är värddatorn sedd inifrån en container (Docker Desktop på Mac och Windows).
       IMAGE_FUNCTION_URL: http://host.docker.internal:7071/api/process-image
@@ -57,6 +59,7 @@ services:
         condition: service_healthy
 
   client:
+    image: utpost-client
     build:
       context: .
       dockerfile: client/Dockerfile
